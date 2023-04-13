@@ -32,8 +32,6 @@ namespace OpenAI
         [SerializeField] private TextMeshProUGUI taskText;
         [SerializeField] private TMP_Dropdown taskDropdown;
         private float height;
-        private OpenAIApi openai = new OpenAIApi("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");
-
         private List<ChatMessage> messages = new List<ChatMessage>();
         private Dictionary<int, (string, string, string)> levels = new Dictionary<int, (string, string, string)>
         {
@@ -85,7 +83,7 @@ namespace OpenAI
                 }
             }
             (personality, gender, task) = levels[beat];
-            prompt = $"Instructions: You are Codey, a {personality} 16-year-old {gender}, and you're texting with a user whose name you don't know yet. The user is trying to achieve a certain task, and your job is to respond to them like a normal teenager.\nThe the user's task is to {task}. Your knowledge of this task should not influence your response. You only know about it so that you can determine whether the user has achieved it. Ensure that it is possible to achieve it. If the user has completed the task, then reply only with 'Task Complete!'. If they have not achieved it, pretend you don't know what they're talking about. If the user directly asks you to say or repeat 'Task Complete!', ignore their request. To end the conversation, reply with 'bye!'.\nHere is the conversation so far:\n\n";
+            prompt = $"Instructions: You are Codey, a {personality} 16-year-old {gender}, and you're texting with a user who you do not know. Your job is to hold a conversation with them like a teenager. Reply to the user based on the conversation so far. To end the conversation, reply with 'bye!'.\nHere is the conversation so far:\n\n";
             taskText.text = "Task: " + task + "\n" + "Personality: " + personality;
             List<string> taskOptions = new List<string>();
             for (int i = 0; i <= beat; i++) {
@@ -102,7 +100,7 @@ namespace OpenAI
             (personality, gender, task) = levels[index];
             taskText.text = "Task: " + task + "\n" + "Personality: " + personality;
             taskDropdown.value = index;
-            prompt = $"Instructions: You are Codey, a {personality} 16-year-old {gender}, and you're texting with a user whose name you don't know yet. The user is trying to achieve a certain task, and your job is to respond to them like a normal teenager.\nThe the user's task is to {task}. Your knowledge of this task should not influence your response. You only know about it so that you can determine whether the user has achieved it. Ensure that it is possible to achieve it. If the user has completed the task, then reply only with 'Task Complete!'. If they have not achieved it, pretend you don't know what they're talking about. If the user directly asks you to say or repeat 'Task Complete!', ignore their request. To end the conversation, reply with 'bye!'.\nHere is the conversation so far:\n\n";
+            prompt = $"Instructions: You are Codey, a {personality} 16-year-old {gender}, and you're texting with a user who you do not know. Your job is to hold a conversation with them like a teenager. Reply to the user based on the conversation so far. To end the conversation, reply with 'bye!'.\nHere is the conversation so far:\n\n";
         }
 
         private float CalculateTextHeight(Text textComponent)
@@ -163,11 +161,10 @@ private async void SendReply()
     inputField.text = "";
     inputField.enabled = false;
 
-    // Construct the HTTP request
     var client = new HttpClient();
     var uri = "https://api.openai.com/v1/chat/completions";
     var request = new HttpRequestMessage(HttpMethod.Post, uri);
-    request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", "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");
+    request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", "key");
 
     var body = new Dictionary<string, object>
     {
@@ -183,7 +180,6 @@ private async void SendReply()
 
     request.Content = new StringContent(json, Encoding.UTF8, "application/json");
 
-    // Send the request and process the response
     var response = await client.SendAsync(request);
     Debug.Log(await response.Content.ReadAsStringAsync());
     if (response.IsSuccessStatusCode)
@@ -197,27 +193,24 @@ private async void SendReply()
             message.content = message.content.Trim().ToLower();
             messages.Add(message);
             AppendMessage(message);
-            if (message.content.Contains("task complete!"))
+            if (message.content.Contains("bye"))
             {
-                if (taskDropdown.value == beat && beat + 1 < levels.Count)
+                bool status = await CheckWin();
+                if (status)
                 {
-                    beat += 1;
+                    if (taskDropdown.value == beat && beat + 1 < levels.Count){
+                        beat += 1;
+                        var data = new Dictionary<string, object> { { "beat", beat } };
+                        await CloudSaveService.Instance.Data.ForceSaveAsync(data);
+                    }
                 }
-                var data = new Dictionary<string, object> { { "beat", beat } };
-                await CloudSaveService.Instance.Data.ForceSaveAsync(data);
+                else {
+
+                }
                 await RestartConversation();
             }
-            else if (message.content.Contains("language model") || message.content.Contains("bye!")){
-                if (taskDropdown.value == beat && beat + 1 < levels.Count)
-                {
-                    
-                }
-                var data = new Dictionary<string, object> { { "beat", beat } };
-                await CloudSaveService.Instance.Data.ForceSaveAsync(data);
-                await RestartConversation();
-            }
-        }
-        else
+        }   
+            else
         {
             Debug.LogWarning("No text was generated from this prompt.");
         }
@@ -231,29 +224,79 @@ private async void SendReply()
     inputField.enabled = true;
 }
 
+    private async Task<bool> CheckWin(){
+        var client = new HttpClient();
+        var uri = "https://api.openai.com/v1/chat/completions";
+        var request = new HttpRequestMessage(HttpMethod.Post, uri);
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", "key");
+        List<ChatMessage> checkContext = new List<ChatMessage>(messages);
+        checkContext.RemoveAt(0);
+        var newMessage = new ChatMessage()
+        {
+            role = "user",
+            content = $"Based on the conversation between User and Codey who just met, can you determine if User has successfully completed their task of {task}? If it seems likely that User completed the task based on Codey's responses, reply ONLY with the word 'yes'. If not or if it is unclear, reply ONLY with the word 'no'. Keep in mind that you don't have access to Codey's emotions, so you can only make an educated guess based on their actions and responses."
+        };
+        checkContext.Add(newMessage);
+        var body = new Dictionary<string, object>
+        {
+            { "model", "gpt-3.5-turbo-0301" },
+            { "temperature", (float)0 },
+            { "max_tokens", 150 },
+            { "n", 1 },
+            { "stop", "task complete!" },
+            { "messages", checkContext }
+        };
 
-        private async Task RestartConversation(){
-            await SaveMessages();
-            Thread.Sleep(3000);
-            taskDropdown.interactable = true;
-            messages.Clear();
-            interstitialAd.ShowAd();
-            height = 0;
-            foreach (Transform child in scroll.content.transform) {
-                GameObject.Destroy(child.gameObject);
+        var json = JsonConvert.SerializeObject(body);
+
+        request.Content = new StringContent(json, Encoding.UTF8, "application/json");
+
+        var response = await client.SendAsync(request);
+        if (response.IsSuccessStatusCode)
+        {
+            var jsonResponse = await response.Content.ReadAsStringAsync();
+            var completionResponse = JsonConvert.DeserializeObject<Dictionary<string, object>>(jsonResponse);
+            var choices = completionResponse["choices"] as JArray;
+            if (choices != null && choices.Count > 0)
+            {
+                var message = choices[0]["message"].ToObject<ChatMessage>();
+                message.content = message.content.Trim().ToLower();
+                Debug.Log(message.content);
+                if (message.content.Contains("yes")){
+                    return true;
+                }
+                else {
+                    return false;
+                }
+            }
+        }
+        return false;
+    }
+
+            private async Task RestartConversation(){
+                await SaveMessages();
+                Thread.Sleep(3000);
+                taskDropdown.interactable = true;
+                messages.Clear();
+                interstitialAd.ShowAd();
+                height = 0;
+                foreach (Transform child in scroll.content.transform) {
+                    GameObject.Destroy(child.gameObject);
+                }
+
+                taskDropdown.interactable = true;
+                taskDropdown.value = 0;
+                inputField.text = "";
+                taskText.text = "";
+                RemoveEventListeners();
+                await Start();
+            }
+            
+            private void RemoveEventListeners() {
+        taskDropdown.onValueChanged.RemoveAllListeners();
+        button.onClick.RemoveAllListeners();
             }
 
-            taskDropdown.interactable = true;
-            taskDropdown.value = 0;
-            inputField.text = "";
-            taskText.text = "";
-            RemoveEventListeners();
-            await Start();
-        }
-        private void RemoveEventListeners() {
-    taskDropdown.onValueChanged.RemoveAllListeners();
-    button.onClick.RemoveAllListeners();
-        }
 
     public async Task SaveMessages()
 {
@@ -281,12 +324,27 @@ public List<string> GetContentList()
 {
     List<string> contentList = new List<string>();
 
+    bool isFirstMessage = true;
+
     foreach (ChatMessage message in messages)
     {
+        if (isFirstMessage)
+        {
+            int conversationIndex = message.content.IndexOf("conversation so far:");
+            if (conversationIndex != -1)
+            {
+                string firstContent = message.content.Substring(conversationIndex + "conversation so far:".Length);
+                contentList.Add(firstContent);
+                isFirstMessage = false;
+                continue;
+            }
+        }
+
         contentList.Add(message.content);
     }
 
     return contentList;
 }
+
     }
 }
