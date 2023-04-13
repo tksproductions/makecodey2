@@ -63,6 +63,10 @@ PrefabInstance:
       propertyPath: m_Padding.m_Right
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 8660877164928630357, guid: 53cd26a6eefa5a74086203cd118a04d3, type: 3}
+      propertyPath: m_CullTransparentMesh
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 8660877164928630358, guid: 53cd26a6eefa5a74086203cd118a04d3, type: 3}
       propertyPath: m_Name
       value: Received Message
