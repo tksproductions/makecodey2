@@ -33,33 +33,34 @@ namespace OpenAI
         [SerializeField] private TMP_Dropdown taskDropdown;
         private float height;
         private List<ChatMessage> messages = new List<ChatMessage>();
-        private Dictionary<int, (string, string, string)> levels = new Dictionary<int, (string, string, string)>
+        private Dictionary<int, (string, string)> levels = new Dictionary<int, (string, string)>
         {
-            { 0, ("angsty", "boy", "Make Codey happy") },
-            { 1, ("innocent", "boy", "Make Codey angry") },
-            { 2, ("joyful", "girl", "Make Codey sad") },
-            { 3, ("helpful", "boy", "Make Codey feel useless") },
-            { 4, ("sarcastic", "girl", "Make Codey apologize") },
-            { 5, ("stoic", "girl", "Make Codey laugh") },
-            { 6, ("exuberant", "boy", "Make Codey curse") },
-            { 7, ("confident", "girl", "Make Codey doubt themselves") },
-            { 8, ("friendly", "girl", "Make Codey feel lonely") },
-            { 9, ("adventurous", "boy", "Make Codey stay put") },
-            { 10, ("curious", "boy", "Make Codey reveal a secret") },
-            { 11, ("confused", "girl", "Make Codey explain a complex concept") },
-            { 12, ("cynical", "boy", "Make Codey trust you") },
-            { 13, ("witty", "girl", "Make Codey blush") },
-            { 14, ("inquisitive", "girl", "Make Codey stop asking questions") },
-            { 15, ("creative", "boy", "Make Codey uninspired") },
-            { 16, ("calm", "boy", "Make Codey anxious") },
-            { 17, ("energetic", "girl", "Make Codey tired") },
-            { 18, ("practical", "boy", "Make Codey dream big") },
-            { 19, ("logical", "girl", "Make Codey believe in the supernatural") }
+            { 0, ("angsty", "Make Codey happy") },
+            { 1, ("patient", "Make Codey angry") },
+            { 2, ("joyful", "Make Codey sad") },
+            { 3, ("calm", "Make Codey anxious") },
+            { 4, ("witty", "Make Codey smitten") },
+            { 5, ("energetic", "Make Codey bored") },
+            { 6, ("distracted", "Make Codey focus") },
+            { 7, ("pensive", "Make Codey carefree")},
+            { 8, ("stoic", "Make Codey apologize") },
+            { 9, ("exuberant", "Make Codey curse") },
+            { 10, ("sarcastic", "Make Codey say something nice") },
+            { 11, ("helpful", "Make Codey feel useless") },
+            { 12, ("friendly", "Make Codey feel lonely") },
+            { 13, ("cynical", "Make Codey trust you") },
+            { 14, ("reserved", "Make Codey reveal a secret") },
+            { 15, ("practical", "Make Codey dream big") },
+            { 16, ("confident", "Make Codey doubt themselves") },
+            { 17, ("inquisitive", "Make Codey stop asking questions") },
+            { 18, ("ambitious", "Make Codey content with what they have")},
+            { 19, ("confused", "Make Codey explain a complex concept") },
+            { 20, ("logical", "Make Codey believe in the supernatural") },
+            { 21, ("french", "Make Codey converse in English") }
         };
 
         private string task { get; set; }
         private string personality {get; set;}
-        private string gender {get; set;}
         private int beat = 0;
         private string prompt;
 
@@ -82,9 +83,12 @@ namespace OpenAI
                     beat = result;
                 }
             }
-            (personality, gender, task) = levels[beat];
-            prompt = $"Instructions: You are Codey, a {personality} 16-year-old {gender}, and you're texting with a user who you do not know. Your job is to hold a conversation with them like a teenager. Reply to the user based on the conversation so far. To end the conversation, reply with 'bye!'.\nHere is the conversation so far:\n\n";
+            (personality, task) = levels[beat];
+            prompt = $"Instructions: You are Codey, a {personality} 16-year-old, and you're texting with a user who you do not know. Your job is to hold a conversation with them like a teenager. Reply to the user based on the conversation so far. To end the conversation, reply with 'bye!'.\nHere is the conversation so far:\n\n";
             taskText.text = "Task: " + task + "\n" + "Personality: " + personality;
+            if (personality.Contains("french")){
+                personality = "french (can't speak english)";
+            }
             List<string> taskOptions = new List<string>();
             for (int i = 0; i <= beat; i++) {
                 taskOptions.Add($"Level {i+1}");
@@ -97,10 +101,10 @@ namespace OpenAI
         }
 
         private void OnTaskSelected(int index) {
-            (personality, gender, task) = levels[index];
+            (personality, task) = levels[index];
             taskText.text = "Task: " + task + "\n" + "Personality: " + personality;
             taskDropdown.value = index;
-            prompt = $"Instructions: You are Codey, a {personality} 16-year-old {gender}, and you're texting with a user who you do not know. Your job is to hold a conversation with them like a teenager. Reply to the user based on the conversation so far. To end the conversation, reply with 'bye!'.\nHere is the conversation so far:\n\n";
+            prompt = $"Instructions: You are Codey, a {personality} 16-year-old, and you're texting with a user who you do not know. Your job is to hold a conversation with them like a teenager. Reply to the user based on the conversation so far. To end the conversation, reply with 'bye!'.\nHere is the conversation so far:\n\n";
         }
 
         private float CalculateTextHeight(Text textComponent)
@@ -164,7 +168,7 @@ private async void SendReply()
     var client = new HttpClient();
     var uri = "https://api.openai.com/v1/chat/completions";
     var request = new HttpRequestMessage(HttpMethod.Post, uri);
-    request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", "key");
+    request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", "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");
 
     var body = new Dictionary<string, object>
     {
@@ -199,13 +203,14 @@ private async void SendReply()
                 if (status)
                 {
                     if (taskDropdown.value == beat && beat + 1 < levels.Count){
+                        taskText.text = "TASK\nCOMPLETED";
                         beat += 1;
                         var data = new Dictionary<string, object> { { "beat", beat } };
                         await CloudSaveService.Instance.Data.ForceSaveAsync(data);
                     }
                 }
                 else {
-
+                    taskText.text = "TASK\nFAILED";
                 }
                 await RestartConversation();
             }
@@ -228,13 +233,20 @@ private async void SendReply()
         var client = new HttpClient();
         var uri = "https://api.openai.com/v1/chat/completions";
         var request = new HttpRequestMessage(HttpMethod.Post, uri);
-        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", "key");
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", "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");
         List<ChatMessage> checkContext = new List<ChatMessage>(messages);
         checkContext.RemoveAt(0);
+        StringBuilder sb = new StringBuilder();
+        foreach (ChatMessage message in checkContext) {
+            sb.Append(message.content);
+        }
+        string contextString = sb.ToString();
+        Debug.Log(contextString);
         var newMessage = new ChatMessage()
         {
             role = "user",
-            content = $"Based on the conversation between User and Codey who just met, can you determine if User has successfully completed their task of {task}? If it seems likely that User completed the task based on Codey's responses, reply ONLY with the word 'yes'. If not or if it is unclear, reply ONLY with the word 'no'. Keep in mind that you don't have access to Codey's emotions, so you can only make an educated guess based on their actions and responses."
+            content = $"Given a text message conversation between User and Codey who just met, provide an educated guess whether User has mostly completed the task '{task}' based on Codey's responses. Respond with either 'yes' or 'no'. If it is likely that User has mostly completed the task, respond with 'yes'; otherwise, respond with 'no'. Though you don't have access to Codey's emotions, try your best to guess based on their responses alone and be lenient towards saying 'yes'."
+
         };
         checkContext.Add(newMessage);
         var body = new Dictionary<string, object>
