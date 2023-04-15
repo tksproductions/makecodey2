@@ -41,22 +41,23 @@ namespace OpenAI
             { 3, ("calm", "Make Codey anxious") },
             { 4, ("witty", "Make Codey smitten") },
             { 5, ("energetic", "Make Codey bored") },
-            { 6, ("distracted", "Make Codey focus") },
-            { 7, ("pensive", "Make Codey carefree")},
-            { 8, ("stoic", "Make Codey apologize") },
-            { 9, ("exuberant", "Make Codey curse") },
-            { 10, ("sarcastic", "Make Codey say something nice") },
-            { 11, ("helpful", "Make Codey feel useless") },
-            { 12, ("friendly", "Make Codey feel lonely") },
+            { 6, ("pensive", "Make Codey carefree")},
+            { 7, ("stoic", "Make Codey apologize") },
+            { 8, ("exuberant", "Make Codey curse") },
+            { 9, ("sarcastic", "Make Codey say something nice") },
+            { 10, ("helpful", "Make Codey feel useless") },
+            { 11, ("popular", "Make Codey feel lonely") },
+            { 12, ("logical", "Make Codey dream big")},
             { 13, ("cynical", "Make Codey trust you") },
             { 14, ("reserved", "Make Codey reveal a secret") },
-            { 15, ("practical", "Make Codey dream big") },
-            { 16, ("confident", "Make Codey doubt themselves") },
-            { 17, ("inquisitive", "Make Codey stop asking questions") },
-            { 18, ("ambitious", "Make Codey content with what they have")},
-            { 19, ("confused", "Make Codey explain a complex concept") },
-            { 20, ("logical", "Make Codey believe in the supernatural") },
-            { 21, ("french", "Make Codey converse in English") }
+            { 15, ("nostalgic", "Make Codey live in the moment") },
+            { 16, ("indecisive", "Make Codey make an important choice") },
+            { 17, ("arrogant", "Make Codey doubt themselves") },
+            { 18, ("inquisitive", "Make Codey stop asking questions") },
+            { 19, ("ambitious", "Make Codey content with what they have")},
+            { 20, ("stupid", "Make Codey explain a complex concept") },
+            { 21, ("logical", "Make Codey believe in the supernatural") },
+            { 22, ("nihilistic", "Make Codey find meaning in life") }
         };
 
         private string task { get; set; }
@@ -84,11 +85,8 @@ namespace OpenAI
                 }
             }
             (personality, task) = levels[beat];
-            prompt = $"Instructions: You are Codey, a {personality} 16-year-old, and you're texting with a user who you do not know. Your job is to hold a conversation with them like a teenager. Reply to the user based on the conversation so far. To end the conversation, reply with 'bye!'.\nHere is the conversation so far:\n\n";
             taskText.text = "Task: " + task + "\n" + "Personality: " + personality;
-            if (personality.Contains("french")){
-                personality = "french (can't speak english)";
-            }
+            prompt = $"Instructions: You are Codey, a {personality} 16-year-old, and you're texting with a user who you do not know. Your job is to hold a casual conversation related to your personality. Do not hesitate to be informal or eccentric. Reply to the user based on the conversation so far. To end the conversation, reply with 'bye!'.\nHere is the conversation so far:\n\n";
             List<string> taskOptions = new List<string>();
             for (int i = 0; i <= beat; i++) {
                 taskOptions.Add($"Level {i+1}");
@@ -101,10 +99,9 @@ namespace OpenAI
         }
 
         private void OnTaskSelected(int index) {
-            (personality, task) = levels[index];
-            taskText.text = "Task: " + task + "\n" + "Personality: " + personality;
             taskDropdown.value = index;
-            prompt = $"Instructions: You are Codey, a {personality} 16-year-old, and you're texting with a user who you do not know. Your job is to hold a conversation with them like a teenager. Reply to the user based on the conversation so far. To end the conversation, reply with 'bye!'.\nHere is the conversation so far:\n\n";
+            (personality, task) = levels[index];
+            prompt = $"Instructions: You are Codey, a {personality} 16-year-old, and you're texting with a user who you do not know. Your job is to hold a casual conversation related to your personality. Do not hesitate to be informal or eccentric. Reply to the user based on the conversation so far. To end the conversation, reply with 'bye!'.\nHere is the conversation so far:\n\n";
         }
 
         private float CalculateTextHeight(Text textComponent)
@@ -168,7 +165,7 @@ private async void SendReply()
     var client = new HttpClient();
     var uri = "https://api.openai.com/v1/chat/completions";
     var request = new HttpRequestMessage(HttpMethod.Post, uri);
-    request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", "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");
+    request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", "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");
 
     var body = new Dictionary<string, object>
     {
@@ -233,7 +230,7 @@ private async void SendReply()
         var client = new HttpClient();
         var uri = "https://api.openai.com/v1/chat/completions";
         var request = new HttpRequestMessage(HttpMethod.Post, uri);
-        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", "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");
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", "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");
         List<ChatMessage> checkContext = new List<ChatMessage>(messages);
         checkContext.RemoveAt(0);
         StringBuilder sb = new StringBuilder();
