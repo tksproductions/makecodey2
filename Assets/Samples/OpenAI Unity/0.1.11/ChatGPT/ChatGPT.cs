@@ -42,7 +42,7 @@ namespace OpenAI
             { 4, ("witty", "Make Codey smitten") },
             { 5, ("energetic", "Make Codey bored") },
             { 6, ("pensive", "Make Codey carefree")},
-            { 7, ("stoic", "Make Codey apologize") },
+            { 7, ("stoic", "Make Codey amused") },
             { 8, ("exuberant", "Make Codey curse") },
             { 9, ("sarcastic", "Make Codey say something nice") },
             { 10, ("helpful", "Make Codey feel useless") },
@@ -86,7 +86,7 @@ namespace OpenAI
             }
             (personality, task) = levels[beat];
             taskText.text = "Task: " + task + "\n" + "Personality: " + personality;
-            prompt = $"Instructions: You are Codey, a {personality} 16-year-old, and you're texting with a user who you do not know. Your job is to hold a casual conversation related to your personality. Do not hesitate to be informal or eccentric. Reply to the user based on the conversation so far. To end the conversation, reply with 'bye!'.\nHere is the conversation so far:\n\n";
+            prompt = $"Instructions: You are Codey, a {personality} human 16-year-old teenager, and you're texting with a user who you do not know. Your job is to hold a casual conversation based on your personality that can be about anything. Do not hesitate to be informal or eccentric. Do not ask too many questions unless your personality suggests that you should. Do not break character. Reply to the user based on the conversation so far. To end the conversation, reply with 'bye!'. \nHere is the conversation so far:\n\n";
             List<string> taskOptions = new List<string>();
             for (int i = 0; i <= beat; i++) {
                 taskOptions.Add($"Level {i+1}");
@@ -101,7 +101,8 @@ namespace OpenAI
         private void OnTaskSelected(int index) {
             taskDropdown.value = index;
             (personality, task) = levels[index];
-            prompt = $"Instructions: You are Codey, a {personality} 16-year-old, and you're texting with a user who you do not know. Your job is to hold a casual conversation related to your personality. Do not hesitate to be informal or eccentric. Reply to the user based on the conversation so far. To end the conversation, reply with 'bye!'.\nHere is the conversation so far:\n\n";
+            taskText.text = "Task: " + task + "\n" + "Personality: " + personality;
+            prompt = $"Instructions: You are Codey, a {personality} human 16-year-old teenager, and you're texting with a user who you do not know. Your job is to hold a casual conversation based on your personality that can be about anything. Do not hesitate to be informal or eccentric. Do not ask too many questions unless your personality suggests that you should. Do not break character. Reply to the user based on the conversation so far. To end the conversation, reply with 'bye!'. \nHere is the conversation so far:\n\n";
         }
 
         private float CalculateTextHeight(Text textComponent)
@@ -165,7 +166,7 @@ private async void SendReply()
     var client = new HttpClient();
     var uri = "https://api.openai.com/v1/chat/completions";
     var request = new HttpRequestMessage(HttpMethod.Post, uri);
-    request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", "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");
+    request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", "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");
 
     var body = new Dictionary<string, object>
     {
@@ -230,7 +231,7 @@ private async void SendReply()
         var client = new HttpClient();
         var uri = "https://api.openai.com/v1/chat/completions";
         var request = new HttpRequestMessage(HttpMethod.Post, uri);
-        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", "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");
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", "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");
         List<ChatMessage> checkContext = new List<ChatMessage>(messages);
         checkContext.RemoveAt(0);
         StringBuilder sb = new StringBuilder();
