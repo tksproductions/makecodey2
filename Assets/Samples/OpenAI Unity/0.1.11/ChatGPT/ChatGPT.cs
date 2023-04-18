@@ -166,7 +166,7 @@ private async void SendReply()
     var client = new HttpClient();
     var uri = "https://api.openai.com/v1/chat/completions";
     var request = new HttpRequestMessage(HttpMethod.Post, uri);
-    request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", "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");
+    request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", "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");
 
     var body = new Dictionary<string, object>
     {
@@ -231,7 +231,7 @@ private async void SendReply()
         var client = new HttpClient();
         var uri = "https://api.openai.com/v1/chat/completions";
         var request = new HttpRequestMessage(HttpMethod.Post, uri);
-        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", "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");
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", "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");
         List<ChatMessage> checkContext = new List<ChatMessage>(messages);
         checkContext.RemoveAt(0);
         StringBuilder sb = new StringBuilder();
