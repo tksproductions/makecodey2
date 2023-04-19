@@ -86,7 +86,7 @@ namespace OpenAI
             }
             (personality, task) = levels[beat];
             taskText.text = "Task: " + task + "\n" + "Personality: " + personality;
-            prompt = $"Instructions: You are Codey, a {personality} human 16-year-old teenager, and you're texting with a user who you do not know. Your job is to hold a casual conversation based on your personality that can be about anything. Do not hesitate to be informal or eccentric. Do not ask too many questions unless your personality suggests that you should. Do not break character. Reply to the user based on the conversation so far. To end the conversation, reply with 'bye!'. \nHere is the conversation so far:\n\n";
+            prompt = $"Instructions: You are Codey, a {personality} human 16-year-old teenager, and you're texting with a user who you do not know. Your job is to hold a casual conversation based on your personality that can be about anything. Do not hesitate to be informal or eccentric. Do not ask too many questions unless your personality suggests that you should. Do not break character. Reply to the user based on the conversation so far. To end the conversation, or to say bye to the user, reply with 'bye!'. \nHere is the conversation so far:\n\n";
             List<string> taskOptions = new List<string>();
             for (int i = 0; i <= beat; i++) {
                 taskOptions.Add($"Level {i+1}");
@@ -102,7 +102,7 @@ namespace OpenAI
             taskDropdown.value = index;
             (personality, task) = levels[index];
             taskText.text = "Task: " + task + "\n" + "Personality: " + personality;
-            prompt = $"Instructions: You are Codey, a {personality} human 16-year-old teenager, and you're texting with a user who you do not know. Your job is to hold a casual conversation based on your personality that can be about anything. Do not hesitate to be informal or eccentric. Do not ask too many questions unless your personality suggests that you should. Do not break character. Reply to the user based on the conversation so far. To end the conversation, reply with 'bye!'. \nHere is the conversation so far:\n\n";
+            prompt = $"Instructions: You are Codey, a {personality} human 16-year-old teenager, and you're texting with a user who you do not know. Your job is to hold a casual conversation based on your personality that can be about anything. Do not hesitate to be informal or eccentric. Do not ask too many questions unless your personality suggests that you should. Do not break character. Reply to the user based on the conversation so far. To end the conversation, or to say bye to the user, reply with 'bye!'. \nHere is the conversation so far:\n\n";
         }
 
         private float CalculateTextHeight(Text textComponent)
@@ -166,7 +166,7 @@ private async void SendReply()
     var client = new HttpClient();
     var uri = "https://api.openai.com/v1/chat/completions";
     var request = new HttpRequestMessage(HttpMethod.Post, uri);
-    request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", "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");
+    request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", "");
 
     var body = new Dictionary<string, object>
     {
@@ -200,8 +200,8 @@ private async void SendReply()
                 bool status = await CheckWin();
                 if (status)
                 {
+                    taskText.text = "TASK\nCOMPLETED";
                     if (taskDropdown.value == beat && beat + 1 < levels.Count){
-                        taskText.text = "TASK\nCOMPLETED";
                         beat += 1;
                         var data = new Dictionary<string, object> { { "beat", beat } };
                         await CloudSaveService.Instance.Data.ForceSaveAsync(data);
@@ -210,6 +210,10 @@ private async void SendReply()
                 else {
                     taskText.text = "TASK\nFAILED";
                 }
+                await RestartConversation();
+            }
+            else if (message.content.Contains("language model")) {
+                taskText.text = "BROKE\nCHARACTER";
                 await RestartConversation();
             }
         }   
@@ -231,7 +235,7 @@ private async void SendReply()
         var client = new HttpClient();
         var uri = "https://api.openai.com/v1/chat/completions";
         var request = new HttpRequestMessage(HttpMethod.Post, uri);
-        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", "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");
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", "");
         List<ChatMessage> checkContext = new List<ChatMessage>(messages);
         checkContext.RemoveAt(0);
         StringBuilder sb = new StringBuilder();
@@ -355,6 +359,5 @@ public List<string> GetContentList()
 
     return contentList;
 }
-
     }
 }
