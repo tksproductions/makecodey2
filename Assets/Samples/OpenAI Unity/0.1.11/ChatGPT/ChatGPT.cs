@@ -43,7 +43,7 @@ namespace OpenAI
             { 5, ("energetic", "Make Codey bored") },
             { 6, ("pensive", "Make Codey carefree")},
             { 7, ("stoic", "Make Codey amused") },
-            { 8, ("exuberant", "Make Codey curse") },
+            { 8, ("immature", "Make Codey serious") },
             { 9, ("sarcastic", "Make Codey say something nice") },
             { 10, ("helpful", "Make Codey feel useless") },
             { 11, ("popular", "Make Codey feel lonely") },
