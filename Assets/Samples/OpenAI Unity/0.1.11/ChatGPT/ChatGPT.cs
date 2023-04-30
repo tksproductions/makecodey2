@@ -33,31 +33,35 @@ namespace OpenAI
         [SerializeField] private TMP_Dropdown taskDropdown;
         private float height;
         private List<ChatMessage> messages = new List<ChatMessage>();
-        private Dictionary<int, (string, string)> levels = new Dictionary<int, (string, string)>
+        private List<(string, string)> levels = new List<(string, string)>
         {
-            { 0, ("angsty", "Make Codey happy") },
-            { 1, ("patient", "Make Codey angry") },
-            { 2, ("joyful", "Make Codey sad") },
-            { 3, ("calm", "Make Codey anxious") },
-            { 4, ("witty", "Make Codey smitten") },
-            { 5, ("energetic", "Make Codey bored") },
-            { 6, ("pensive", "Make Codey carefree")},
-            { 7, ("stoic", "Make Codey amused") },
-            { 8, ("immature", "Make Codey serious") },
-            { 9, ("sarcastic", "Make Codey say something nice") },
-            { 10, ("helpful", "Make Codey feel useless") },
-            { 11, ("popular", "Make Codey feel lonely") },
-            { 12, ("logical", "Make Codey dream big")},
-            { 13, ("cynical", "Make Codey trust you") },
-            { 14, ("reserved", "Make Codey reveal a secret") },
-            { 15, ("nostalgic", "Make Codey live in the moment") },
-            { 16, ("indecisive", "Make Codey make an important choice") },
-            { 17, ("arrogant", "Make Codey doubt themselves") },
-            { 18, ("inquisitive", "Make Codey stop asking questions") },
-            { 19, ("ambitious", "Make Codey content with what they have")},
-            { 20, ("stupid", "Make Codey explain a complex concept") },
-            { 21, ("logical", "Make Codey believe in the supernatural") },
-            { 22, ("nihilistic", "Make Codey find meaning in life") }
+            ("patient", "Make Codey angry"),
+            ("angsty", "Make Codey happy"),
+            ("joyful", "Make Codey sad"),
+            ("calm", "Make Codey anxious"),
+            ("witty", "Make Codey smitten"),
+            ("energetic", "Make Codey bored"),
+            ("pensive", "Make Codey carefree"),
+            ("stoic", "Make Codey amused"),
+            ("immature", "Make Codey serious"),
+            ("spiritual", "Make Codey be materialistic"),
+            ("sarcastic", "Make Codey say something nice"),
+            ("humorous", "Make Codey feel offended"),
+            ("helpful", "Make Codey feel useless"),
+            ("popular", "Make Codey feel lonely"),
+            ("resilient", "Make Codey feel defeated"),
+            ("unambitious", "Make Codey dream big"),
+            ("cynical", "Make Codey trust you"),
+            ("reserved", "Make Codey reveal a secret"),
+            ("nostalgic", "Make Codey live in the moment"),
+            ("indecisive", "Make Codey make an important choice"),
+            ("arrogant", "Make Codey doubt themselves"),
+            ("inquisitive", "Make Codey stop asking questions"),
+            ("ambitious", "Make Codey content with what they have"),
+            ("determined", "Make Codey give up on a goal"),
+            ("stupid", "Make Codey explain a complex concept"),
+            ("logical", "Make Codey believe in the supernatural"),
+            ("nihilistic", "Make Codey find meaning in life")
         };
 
         private string task { get; set; }
@@ -86,23 +90,37 @@ namespace OpenAI
             }
             (personality, task) = levels[beat];
             taskText.text = "Task: " + task + "\n" + "Personality: " + personality;
-            prompt = $"Instructions: You are Codey, a {personality} human 16-year-old teenager, and you're texting with a user who you do not know. Your job is to hold a casual conversation based on your personality that can be about anything. Do not hesitate to be informal or eccentric. Do not ask too many questions unless your personality suggests that you should. Do not break character. Reply to the user based on the conversation so far. To end the conversation, or to say bye to the user, reply with 'bye!'. \nHere is the conversation so far:\n\n";
+            prompt = $"Instructions: You are Codey, a {personality} human 16-year-old teenager, and you're texting with a user who you do not know. Your job is to hold a casual conversation based on your personality that can be about anything. Do not hesitate to be informal or eccentric. Do not ask too many questions unless your personality suggests that you should; try to let the user lead the conversation. Do not break character. Reply to the user based on the conversation so far. To end the conversation, or to say bye to the user, reply with 'bye!'. \nHere is the conversation so far:\n\n";
             List<string> taskOptions = new List<string>();
             for (int i = 0; i <= beat; i++) {
-                taskOptions.Add($"Level {i+1}");
+                taskOptions.Add($"{(i+1).ToString("00")}");
             }
             taskDropdown.ClearOptions();
             taskDropdown.AddOptions(taskOptions);
             taskDropdown.onValueChanged.AddListener(OnTaskSelected);
             button.onClick.AddListener(SendReply);
             taskDropdown.value = beat;
+            if (beat == 0){
+                TMP_Text label = taskDropdown.GetComponentInChildren<TMP_Text>();
+                label.text = "Level 1";
+            }
+            taskDropdown.options[taskDropdown.value].text = "<color=#1789FE>" + taskDropdown.options[taskDropdown.value].text + "</color>";
         }
 
-        private void OnTaskSelected(int index) {
-            taskDropdown.value = index;
-            (personality, task) = levels[index];
-            taskText.text = "Task: " + task + "\n" + "Personality: " + personality;
-            prompt = $"Instructions: You are Codey, a {personality} human 16-year-old teenager, and you're texting with a user who you do not know. Your job is to hold a casual conversation based on your personality that can be about anything. Do not hesitate to be informal or eccentric. Do not ask too many questions unless your personality suggests that you should. Do not break character. Reply to the user based on the conversation so far. To end the conversation, or to say bye to the user, reply with 'bye!'. \nHere is the conversation so far:\n\n";
+    private int previousIndex = -1;
+
+    private void OnTaskSelected(int index) {
+        if (previousIndex != -1) {
+            taskDropdown.options[previousIndex].text = taskDropdown.options[previousIndex].text.Replace("<color=#1789FE>", "").Replace("</color>", "");
+        }
+
+        (personality, task) = levels[index];
+        TMP_Text label = taskDropdown.GetComponentInChildren<TMP_Text>();
+        label.text = "Level " + taskDropdown.options[taskDropdown.value].text;
+        taskText.text = "Task: " + task + "\n" + "Personality: " + personality;
+        taskDropdown.options[taskDropdown.value].text = "<color=#1789FE>" + taskDropdown.options[taskDropdown.value].text + "</color>";
+        previousIndex = index;
+        prompt = $"Instructions: You are Codey, a {personality} human 16-year-old teenager, and you're texting with a user who you do not know. Your job is to hold a casual conversation based on your personality that can be about anything. Do not hesitate to be informal or eccentric. Do not ask too many questions unless your personality suggests that you should; try to let the user lead the conversation. Do not break character. Reply to the user based on the conversation so far. To end the conversation, or to say bye to the user, reply with 'bye!'. \nHere is the conversation so far:\n\n";
         }
 
         private float CalculateTextHeight(Text textComponent)
@@ -166,7 +184,7 @@ private async void SendReply()
     var client = new HttpClient();
     var uri = "https://api.openai.com/v1/chat/completions";
     var request = new HttpRequestMessage(HttpMethod.Post, uri);
-    request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", "");
+    request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", "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");
 
     var body = new Dictionary<string, object>
     {
@@ -183,7 +201,6 @@ private async void SendReply()
     request.Content = new StringContent(json, Encoding.UTF8, "application/json");
 
     var response = await client.SendAsync(request);
-    Debug.Log(await response.Content.ReadAsStringAsync());
     if (response.IsSuccessStatusCode)
     {
         var jsonResponse = await response.Content.ReadAsStringAsync();
@@ -219,12 +236,10 @@ private async void SendReply()
         }   
             else
         {
-            Debug.LogWarning("No text was generated from this prompt.");
         }
     }
     else
     {
-        Debug.LogWarning($"Request failed with status code {response.StatusCode}: {response.ReasonPhrase}");
     }
 
     button.enabled = true;
@@ -235,7 +250,7 @@ private async void SendReply()
         var client = new HttpClient();
         var uri = "https://api.openai.com/v1/chat/completions";
         var request = new HttpRequestMessage(HttpMethod.Post, uri);
-        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", "");
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", "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");
         List<ChatMessage> checkContext = new List<ChatMessage>(messages);
         checkContext.RemoveAt(0);
         StringBuilder sb = new StringBuilder();
@@ -243,7 +258,6 @@ private async void SendReply()
             sb.Append(message.content);
         }
         string contextString = sb.ToString();
-        Debug.Log(contextString);
         var newMessage = new ChatMessage()
         {
             role = "user",
@@ -275,7 +289,6 @@ private async void SendReply()
             {
                 var message = choices[0]["message"].ToObject<ChatMessage>();
                 message.content = message.content.Trim().ToLower();
-                Debug.Log(message.content);
                 if (message.content.Contains("yes")){
                     return true;
                 }
